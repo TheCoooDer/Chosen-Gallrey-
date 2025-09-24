@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShortVid - Mobile Video Sharing</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        :root {
+            --primary: #ff0050;
+            --dark: #121212;
+            --darker: #0a0a0a;
+            --light: #f5f5f5;
+            --gray: #2a2a2a;
+            --text: #ffffff;
+            --card-bg: rgba(30, 30, 30, 0.8);
+        }
+
+        body {
+            background-color: var(--dark);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: center;
+            padding: 16px 0;
+            background: var(--darker);
+            position: relative;
+            z-index: 10;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--primary), #ff6a00);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -1px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Navigation */
+        .nav {
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            background: var(--darker);
+            border-top: 1px solid var(--gray);
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            z-index: 20;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-item.active {
+            background: var(--gray);
+        }
+
+        .nav-item i {
+            font-size: 20px;
+        }
+
+        .nav-item span {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Sections */
+        .section {
+            display: none;
+            height: 100%;
+            overflow-y: auto;
+            padding-bottom: 70px; /* Space for nav */
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* Home Section */
+        .video-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .video-player {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: black;
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            pointer-events: none;
+        }
+
+        .save-btn {
+            align-self: flex-end;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            pointer-events: all;
+            transition: all 0.3s ease;
+        }
+
+        .save-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .save-btn.saved {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .play-pause-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            pointer-events: all;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .video-container:hover .play-pause-btn {
+            opacity: 1;
+        }
+
+        .play-pause-btn i {
+            font-size: 24px;
+            color: white;
+        }
+
+        /* Upload Section */
+        .upload-container {
+            padding: 24px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .upload-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .upload-header h2 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            background: linear-gradient(to right, var(--primary), #ff6a00);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .upload-header p {
+            color: #aaa;
+            font-size: 16px;
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--light);
+        }
+
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 14px;
+            background: var(--gray);
+            border: 1px solid #444;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+        }
+
+        .input-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #e00040;
+        }
+
+        /* Saved Section */
+        .saved-list {
+            padding: 20px;
+        }
+
+        .saved-item {
+            background: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            aspect-ratio: 9/16;
+            position: relative;
+        }
+
+        .saved-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .saved-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 16px;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+        }
+
+        .saved-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .saved-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            color: #444;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 22px;
+            margin-bottom: 12px;
+            color: #ddd;
+        }
+
+        .empty-state p {
+            color: #777;
+            line-height: 1.6;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--darker);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Responsive */
+        @media (min-width: 768px) {
+            .video-container {
+                height: 90vh;
+                max-width: 400px;
+                margin: 0 auto;
+                border-radius: 24px;
+                overflow: hidden;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            }
+            
+            .nav {
+                max-width: 400px;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">ShortVid</div>
+    </header>
+
+    <main class="main-content">
+        <!-- Home Section -->
+        <section id="home" class="section active">
+            <div class="video-container">
+                <video class="video-player" id="mainVideo" muted playsinline>
+                    <source src="https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-sign-1232-large.mp4" type="video/mp4">
+                </video>
+                <div class="video-overlay">
+                    <div></div>
+                    <button class="save-btn" id="saveBtn">
+                        <i class="fas fa-bookmark"></i>
+                    </button>
+                </div>
+                <div class="play-pause-btn" id="playPauseBtn">
+                    <i class="fas fa-pause"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- Upload Section -->
+        <section id="upload" class="section">
+            <div class="upload-container">
+                <div class="upload-header">
+                    <h2>Upload Video</h2>
+                    <p>Add your video via URL or embed code</p>
+                </div>
+                <div class="input-group">
+                    <label for="videoTitle">Video Title</label>
+                    <input type="text" id="videoTitle" placeholder="Enter video title">
+                </div>
+                <div class="input-group">
+                    <label for="videoUrl">Video URL or Embed Code</label>
+                    <textarea id="videoUrl" placeholder="Paste video URL or embed code here"></textarea>
+                </div>
+                <button class="btn" id="uploadBtn">Upload Video</button>
+            </div>
+        </section>
+
+        <!-- Saved Section -->
+        <section id="saved" class="section">
+            <div class="saved-list" id="savedList">
+                <!-- Saved videos will be added here dynamically -->
+                <div class="empty-state">
+                    <i class="fas fa-bookmark"></i>
+                    <h3>No Saved Videos</h3>
+                    <p>Save videos from the home feed to view them later</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <nav class="nav">
+        <div class="nav-item active" data-section="home">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </div>
+        <div class="nav-item" data-section="upload">
+            <i class="fas fa-upload"></i>
+            <span>Upload</span>
+        </div>
+        <div class="nav-item" data-section="saved">
+            <i class="fas fa-bookmark"></i>
+            <span>Saved</span>
+        </div>
+    </nav>
+
+    <script>
+        // DOM Elements
+        const sections = document.querySelectorAll('.section');
+        const navItems = document.querySelectorAll('.nav-item');
+        const saveBtn = document.getElementById('saveBtn');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const mainVideo = document.getElementById('mainVideo');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const savedList = document.getElementById('savedList');
+        
+        // Sample videos for demo
+        const sampleVideos = [
+            {
+                id: 1,
+                title: "Neon City Vibes",
+                url: "https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-sign-1232-large.mp4",
+                saved: false
+            },
+            {
+                id: 2,
+                title: "Mountain Adventure",
+                url: "https://assets.mixkit.co/videos/preview/mixkit-mountain-adventure-4186-large.mp4",
+                saved: false
+            },
+            {
+                id: 3,
+                title: "Ocean Waves",
+                url: "https://assets.mixkit.co/videos/preview/mixkit-ocean-waves-4179-large.mp4",
+                saved: false
+            }
+        ];
+        
+        let currentVideoIndex = 0;
+        let savedVideos = JSON.parse(localStorage.getItem('savedVideos')) || [];
+        
+        // Initialize
+        function init() {
+            updateVideoPlayer();
+            renderSavedVideos();
+            setupEventListeners();
+        }
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            // Navigation
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const sectionId = item.getAttribute('data-section');
+                    showSection(sectionId);
+                });
+            });
+            
+            // Save button
+            saveBtn.addEventListener('click', toggleSaveVideo);
+            
+            // Play/Pause button
+            playPauseBtn.addEventListener('click', togglePlayPause);
+            mainVideo.addEventListener('click', togglePlayPause);
+            
+            // Video events
+            mainVideo.addEventListener('play', () => {
+                playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            });
+            
+            mainVideo.addEventListener('pause', () => {
+                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+            });
+            
+            // Upload button
+            uploadBtn.addEventListener('click', handleUpload);
+            
+            // Swipe navigation for mobile
+            let startY = 0;
+            let endY = 0;
+            
+            mainVideo.addEventListener('touchstart', (e) => {
+                startY = e.touches[0].clientY;
+            });
+            
+            mainVideo.addEventListener('touchend', (e) => {
+                endY = e.changedTouches[0].clientY;
+                handleSwipe();
+            });
+        }
+        
+        // Show specific section
+        function showSection(sectionId) {
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            navItems.forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            document.getElementById(sectionId).classList.add('active');
+            document.querySelector(`.nav-item[data-section="${sectionId}"]`).classList.add('active');
+            
+            // If showing home, ensure video is playing
+            if (sectionId === 'home') {
+                mainVideo.play();
+            } else {
+                mainVideo.pause();
+            }
+        }
+        
+        // Update video player with current video
+        function updateVideoPlayer() {
+            const currentVideo = sampleVideos[currentVideoIndex];
+            mainVideo.src = currentVideo.url;
+            mainVideo.load();
+            mainVideo.play();
+            
+            // Update save button state
+            saveBtn.classList.toggle('saved', currentVideo.saved || 
+                savedVideos.some(v => v.url === currentVideo.url));
+        }
+        
+        // Toggle save video
+        function toggleSaveVideo() {
+            const currentVideo = sampleVideos[currentVideoIndex];
+            const isSaved = savedVideos.some(v => v.url === currentVideo.url);
+            
+            if (isSaved) {
+                // Remove from saved
+                savedVideos = savedVideos.filter(v => v.url !== currentVideo.url);
+                saveBtn.classList.remove('saved');
+            } else {
+                // Add to saved
+                savedVideos.push({
+                    id: currentVideo.id,
+                    title: currentVideo.title,
+                    url: currentVideo.url,
+                    savedAt: new Date().toISOString()
+                });
+                saveBtn.classList.add('saved');
+            }
+            
+            localStorage.setItem('savedVideos', JSON.stringify(savedVideos));
+            renderSavedVideos();
+        }
+        
+        // Toggle play/pause
+        function togglePlayPause() {
+            if (mainVideo.paused) {
+                mainVideo.play();
+            } else {
+                mainVideo.pause();
+            }
+        }
+        
+        // Handle swipe navigation
+        function handleSwipe() {
+            const threshold = 50;
+            const diff = startY - endY;
+            
+            if (Math.abs(diff) > threshold) {
+                if (diff > 0) {
+                    // Swipe up - next video
+                    nextVideo();
+                } else {
+                    // Swipe down - previous video
+                    prevVideo();
+                }
+            }
+        }
+        
+        // Navigate to next video
+        function nextVideo() {
+            currentVideoIndex = (currentVideoIndex + 1) % sampleVideos.length;
+            updateVideoPlayer();
+        }
+        
+        // Navigate to previous video
+        function prevVideo() {
+            currentVideoIndex = (currentVideoIndex - 1 + sampleVideos.length) % sampleVideos.length;
+            updateVideoPlayer();
+        }
+        
+        // Handle video upload
+        function handleUpload() {
+            const title = document.getElementById('videoTitle').value.trim();
+            const url = document.getElementById('videoUrl').value.trim();
+            
+            if (!title || !url) {
+                alert('Please fill in both title and video URL');
+                return;
+            }
+            
+            // In a real app, you would process the URL/embed code here
+            // For demo, we'll just add it to our sample videos
+            const newVideo = {
+                id: sampleVideos.length + 1,
+                title: title,
+                url: url,
+                saved: false
+            };
+            
+            sampleVideos.push(newVideo);
+            currentVideoIndex = sampleVideos.length - 1;
+            updateVideoPlayer();
+            
+            // Reset form
+            document.getElementById('videoTitle').value = '';
+            document.getElementById('videoUrl').value = '';
+            
+            // Switch to home section
+            showSection('home');
+            
+            alert('Video uploaded successfully! You can now view it in the home feed.');
+        }
+        
+        // Render saved videos
+        function renderSavedVideos() {
+            if (savedVideos.length === 0) {
+                savedList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-bookmark"></i>
+                        <h3>No Saved Videos</h3>
+                        <p>Save videos from the home feed to view them later</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            savedList.innerHTML = '';
+            savedVideos.forEach(video => {
+                const videoElement = document.createElement('div');
+                videoElement.className = 'saved-item';
+                videoElement.innerHTML = `
+                    <video class="saved-video" src="${video.url}" muted></video>
+                    <div class="saved-overlay">
+                        <div class="saved-title">${video.title}</div>
+                        <div class="saved-meta">
+                            <span>${new Date(video.savedAt).toLocaleDateString()}</span>
+                            <span>9:16</span>
+                        </div>
+                    </div>
+                `;
+                savedList.appendChild(videoElement);
+                
+                // Add play on hover for desktop
+                videoElement.querySelector('.saved-video').addEventListener('click', () => {
+                    // In a real app, this would open the video in the main player
+                    alert('Playing: ' + video.title);
+                });
+            });
+        }
+        
+        // Initialize the app
+        init();
+    </script>
+</body>
+</html>
